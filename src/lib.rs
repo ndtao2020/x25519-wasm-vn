@@ -1,3 +1,6 @@
+#[global_allocator]
+pub static GLOBAL_ALLOCATOR: &alloc_cat::AllocCat = &alloc_cat::ALLOCATOR;
+
 use wasm_bindgen::prelude::*;
 use x25519_dalek::{PublicKey, SharedSecret, StaticSecret};
 
@@ -5,50 +8,111 @@ const KEY_LENGTH: usize = 32;
 
 #[wasm_bindgen]
 pub struct X25519Keypair {
-    public_key: Vec<u8>,
-    private_key: Vec<u8>,
+    public_key: [u8; KEY_LENGTH],
+    private_key: [u8; KEY_LENGTH],
 }
 
 #[wasm_bindgen]
 impl X25519Keypair {
     #[wasm_bindgen(getter)]
     pub fn public_key(&self) -> Vec<u8> {
-        self.public_key.clone()
+        self.public_key.to_vec()
     }
 
     #[wasm_bindgen(getter)]
     pub fn private_key(&self) -> Vec<u8> {
-        self.private_key.clone()
+        self.private_key.to_vec()
     }
 }
 
 #[wasm_bindgen]
-pub fn generate_keypair() -> Result<X25519Keypair, JsValue> {
-    let secret: StaticSecret = StaticSecret::random();
+pub fn generate_keypair() -> X25519Keypair {
+    let secret = StaticSecret::random();
     let public = PublicKey::from(&secret);
 
-    Ok(X25519Keypair {
-        public_key: public.as_bytes().to_vec(),
-        private_key: secret.as_bytes().to_vec(),
-    })
+    X25519Keypair {
+        public_key: *public.as_bytes(),
+        private_key: *secret.as_bytes(),
+    }
 }
 
 #[wasm_bindgen]
 pub fn diffie_hellman(private_key: &[u8], public_key: &[u8]) -> Result<Vec<u8>, JsValue> {
-    if private_key.len() != KEY_LENGTH {
-        return Err(JsValue::from_str("Invalid private key length !"));
-    }
-    if public_key.len() != KEY_LENGTH {
-        return Err(JsValue::from_str("Invalid public key length !"));
-    }
+    let private_key_array: [u8; KEY_LENGTH] = private_key
+        .try_into()
+        .map_err(|_| JsValue::from_str("Invalid private key length"))?;
 
-    // Convert byte slices into X25519 keys
-    let private_key = StaticSecret::from(<[u8; KEY_LENGTH]>::try_from(private_key).unwrap());
-    let public_key = PublicKey::from(<[u8; KEY_LENGTH]>::try_from(public_key).unwrap());
+    let public_key_array: [u8; KEY_LENGTH] = public_key
+        .try_into()
+        .map_err(|_| JsValue::from_str("Invalid public key length"))?;
+
+    let private_key: StaticSecret = StaticSecret::from(private_key_array);
+    let public_key: PublicKey = PublicKey::from(public_key_array);
 
     let shared_secret: SharedSecret = private_key.diffie_hellman(&public_key);
 
     Ok(shared_secret.as_bytes().to_vec())
+}
+
+#[wasm_bindgen]
+pub fn get_public_key(private_key: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let private_key_array: [u8; KEY_LENGTH] = private_key
+        .try_into()
+        .map_err(|_| JsValue::from_str("Invalid private key length"))?;
+
+    let private_key: StaticSecret = StaticSecret::from(private_key_array);
+    let public_key: PublicKey = PublicKey::from(&private_key);
+
+    let shared_secret: SharedSecret = private_key.diffie_hellman(&public_key);
+
+    Ok(shared_secret.as_bytes().to_vec())
+}
+
+#[wasm_bindgen]
+pub struct DiffieHellman {
+    private_key: [u8; KEY_LENGTH],
+}
+
+#[wasm_bindgen]
+impl DiffieHellman {
+    #[wasm_bindgen(constructor)]
+    pub fn new(private_key: &[u8]) -> Result<DiffieHellman, JsValue> {
+        let private_key_array: [u8; KEY_LENGTH] = private_key
+            .try_into()
+            .map_err(|_| JsValue::from_str("Invalid private key length"))?;
+
+        Ok(DiffieHellman {
+            private_key: private_key_array,
+        })
+    }
+
+    pub fn get_shared_key(&self, public_key: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let public_key_array: [u8; KEY_LENGTH] = public_key
+            .try_into()
+            .map_err(|_| JsValue::from_str("Invalid public key length"))?;
+
+        let private_key: StaticSecret = StaticSecret::from(self.private_key);
+        let public_key: PublicKey = PublicKey::from(public_key_array);
+
+        let shared_secret: SharedSecret = private_key.diffie_hellman(&public_key);
+
+        Ok(shared_secret.as_bytes().to_vec())
+    }
+
+    #[wasm_bindgen]
+    pub fn get_public_key(&self) -> Vec<u8> {
+        let private_key: StaticSecret = StaticSecret::from(self.private_key);
+        let public_key: PublicKey = PublicKey::from(&private_key);
+        public_key.as_bytes().to_vec()
+    }
+
+    #[wasm_bindgen]
+    pub fn from_random() -> DiffieHellman {
+        let secret: StaticSecret = StaticSecret::random();
+        DiffieHellman {
+            private_key: *secret.as_bytes(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -58,27 +122,47 @@ mod tests {
 
     #[test]
     fn test_generate_keypair() {
-        let result = generate_keypair().unwrap();
-        assert_eq!(result.public_key.len(), 32);
-        assert_eq!(result.private_key.len(), 32);
+        let result = generate_keypair();
+
+        assert_eq!(result.public_key.len(), KEY_LENGTH);
+        assert_eq!(result.private_key.len(), KEY_LENGTH);
     }
 
     #[test]
-    fn test_diffie_hellman_success() {
+    fn test_diffie_hellman() {
         // Simulate Alice and Bob key exchange
-        let alice_secret = StaticSecret::random();
-        let alice_public = PublicKey::from(&alice_secret);
+        let alice_secret: StaticSecret = StaticSecret::random();
+        let alice_public: PublicKey = PublicKey::from(&alice_secret);
 
-        let bob_secret = StaticSecret::random();
-        let bob_public = PublicKey::from(&bob_secret);
+        let bob_secret: StaticSecret = StaticSecret::random();
+        let bob_public: PublicKey = PublicKey::from(&bob_secret);
 
         // Now test via your wasm-exposed function
-        let alice_shared_secret =
+        let alice_shared_secret: Vec<u8> =
             diffie_hellman(alice_secret.as_bytes(), bob_public.as_bytes()).unwrap();
 
-        let bob_shared_secret =
+        let bob_shared_secret: Vec<u8> =
             diffie_hellman(bob_secret.as_bytes(), alice_public.as_bytes()).unwrap();
 
         assert_eq!(alice_shared_secret, bob_shared_secret);
+    }
+
+    #[test]
+    fn test_get_public_key() {
+        let alice_secret: StaticSecret = StaticSecret::random();
+        let alice_public = get_public_key(alice_secret.as_bytes()).unwrap();
+
+        assert_eq!(alice_public.len(), KEY_LENGTH);
+    }
+
+    #[test]
+    fn test_diffie_hellman_struct() {
+        let alice = DiffieHellman::from_random();
+        let bob = DiffieHellman::from_random();
+
+        let alice_shared = alice.get_shared_key(&bob.get_public_key()).unwrap();
+        let bob_shared = bob.get_shared_key(&alice.get_public_key()).unwrap();
+
+        assert_eq!(alice_shared, bob_shared);
     }
 }
