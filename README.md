@@ -1,3 +1,6 @@
+# x25519-wasm-vn
+[![npm](https://img.shields.io/npm/v/x25519-wasm-vn)](https://www.npmjs.com/package/x25519-wasm-vn)
+
 ### Guides
 
 https://developer.mozilla.org/en-US/docs/WebAssembly/Guides/Rust_to_Wasm
