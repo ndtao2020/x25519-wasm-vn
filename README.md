@@ -1,3 +1,7 @@
+### Guides
+
+https://developer.mozilla.org/en-US/docs/WebAssembly/Guides/Rust_to_Wasm
+
 ### 🛠️ Installing `wasm-pack`
 
 ```

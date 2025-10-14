@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8" />
+    <title>x25519-wasm example</title>
+</head>
+
+<body>
+    <script type="module">
+        import init, { generate_keypair, diffie_hellman } from "./pkg/x25519_wasm_vn.js";
+
+        init().then(() => {
+            const bob_key_pair = generate_keypair();
+
+            console.log("Public key (Bob): ", bob_key_pair.public_key);
+            console.log("Private key (Bob): ", bob_key_pair.private_key);
+
+            const alice_key_pair = generate_keypair();
+
+            console.log("Public key (Alice): ", alice_key_pair.public_key);
+            console.log("Private key (Alice): ", alice_key_pair.private_key);
+
+            let alice_shared = diffie_hellman(alice_key_pair.private_key, bob_key_pair.public_key);
+
+            let bob_shared = diffie_hellman(bob_key_pair.private_key, alice_key_pair.public_key);
+
+            console.log("Shared key (Bob): ", bob_shared);
+            console.log("Shared key (Alice): ", alice_shared);
+
+            try {
+                assertTwoByteArraysEqual(alice_shared, bob_shared, "Test failed: Expected unequal lengths."); // This will throw an error
+
+                console.log("Ok !");
+            } catch (error) {
+                console.error(error.message);
+            }
+        });
+
+        function assertTwoByteArraysEqual(arr1, arr2, message) {
+            if (!(arr1 instanceof Uint8Array) || !(arr2 instanceof Uint8Array)) {
+                throw new Error("Both inputs must be Uint8Array instances.");
+            }
+
+            if (arr1.length !== arr2.length) {
+                throw new Error(message || "Byte arrays have different lengths.");
+            }
+
+            for (let i = 0; i < arr1.length; i++) {
+                if (arr1[i] !== arr2[i]) {
+                    throw new Error(message || `Byte arrays differ at index ${i}.`);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

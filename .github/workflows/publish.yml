@@ -34,10 +34,18 @@ jobs:
       - name: Install wasm-pack
         run: cargo install wasm-pack
 
+      - name: Test
+        run: cargo test
+
       - name: Build WASM package
+        env:
+          RUST_LOG: debug
         run: wasm-pack build --target web # Or other target like nodejs or bundler
+
+      - name: Authenticate with npm
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Publish to NPM
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RUST_LOG: debug
         run: wasm-pack publish
