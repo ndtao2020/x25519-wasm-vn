@@ -8,7 +8,7 @@
 
 <body>
     <script type="module">
-        import init, { generate_keypair, diffie_hellman } from "./pkg-web/x25519_wasm_vn.js";
+        import init, { generate_keypair, diffie_hellman } from "./pkg/x25519_wasm_vn.js";
 
         init().then(() => {
             const bob_key_pair = generate_keypair();

@@ -48,4 +48,4 @@ jobs:
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Publish to NPM
-        run: cd pkg-bundler && npm publish
+        run: cd pkg && npm publish
