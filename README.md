@@ -10,15 +10,8 @@ cargo install wasm-opt --locked
 
 ## Building via `wasm-bindgen-cli`
 
-* bundler: (produces code for usage with bundlers like Webpack)
-* web: (directly loadable in a web browser)
-* nodejs: (loadable via require as a CommonJS Node.js module)
-* deno: (usable as a Deno module)
-* no-modules: (like the web target but doesn't use ES Modules).
-
 ```sh
-chmod +x build.sh
-./build.sh
+chmod +x build.sh && ./build.sh
 ```
 
 ### Publish to NPM
@@ -30,7 +23,7 @@ cd pkg && npm publish
 ## Usage
 
 ```ts
-import instantiate, { DiffieHellman, generate_keypair, X25519Keypair } from 'x25519-wasm-vn'
+import instantiate, { DiffieHellman, generate_keypair, X25519Keypair } from 'x25519-wasm-vn/web'
 
 interface KeyPair {
   privateKey: Uint8Array

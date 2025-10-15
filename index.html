@@ -8,7 +8,10 @@
 
 <body>
     <script type="module">
-        import init, { generate_keypair, diffie_hellman } from "./pkg/x25519_wasm_vn.js";
+        import init, { generate_keypair, diffie_hellman, hkdf_sha_256, random_secret } from "./pkg/web/x25519_wasm_vn.js";
+
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
 
         init().then(() => {
             const bob_key_pair = generate_keypair();
@@ -31,7 +34,26 @@
             try {
                 assertTwoByteArraysEqual(alice_shared, bob_shared, "Test failed: Expected unequal lengths."); // This will throw an error
 
-                console.log("Ok !");
+                console.log("Diffie hellman Ok !");
+            } catch (error) {
+                console.error(error.message);
+            }
+
+            const info = encoder.encode('application-key')
+
+            let alice_enc_key = hkdf_sha_256(alice_shared, undefined, info, 32);
+
+            console.log("Derive key (Alice): ", alice_enc_key);
+
+            let bob_enc_key = hkdf_sha_256(bob_shared, undefined, info, 32);
+
+            console.log("Derive key (Bob): ", alice_enc_key);
+
+
+            try {
+                assertTwoByteArraysEqual(alice_enc_key, bob_enc_key, "Test failed: Expected unequal lengths."); // This will throw an error
+
+                console.log("Derive the key Ok !");
             } catch (error) {
                 console.error(error.message);
             }
