@@ -17,8 +17,8 @@
         "x25519_wasm_vn.d.ts",
         "x25519_wasm_vn.js"
     ],
-    "main": "x25519_wasm_vn.js",
-    "types": "x25519_wasm_vn.d.ts",
+    "types": "./web/x25519_wasm_vn.d.ts",
+    "main": "./web/x25519_wasm_vn.js",
     "sideEffects": [
         "./snippets/*"
     ],
@@ -38,10 +38,15 @@
             "require": "./nodejs/x25519_wasm_vn.js",
             "import": "./nodejs/x25519_wasm_vn.js"
         },
+        "./web": {
+            "types": "./web/x25519_wasm_vn.d.ts",
+            "require": "./web/x25519_wasm_vn.js",
+            "import": "./web/x25519_wasm_vn.js"
+        },
         ".": {
-            "types": "./x25519_wasm_vn.d.ts",
-            "require": "./x25519_wasm_vn.js",
-            "import": "./x25519_wasm_vn.js"
+            "types": "./web/x25519_wasm_vn.d.ts",
+            "require": "./web/x25519_wasm_vn.js",
+            "import": "./web/x25519_wasm_vn.js"
         }
     },
     "keywords": [
