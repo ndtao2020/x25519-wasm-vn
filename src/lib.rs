@@ -89,7 +89,7 @@ pub fn hkdf_sha_256(
     shared_secret: &[u8],
     salt: Option<Vec<u8>>,
     info: Option<Vec<u8>>,
-    output_length: usize,
+    length: usize,
 ) -> Result<Vec<u8>, JsValue> {
     // Validate input lengths
     if shared_secret.len() != KEY_LENGTH {
@@ -117,9 +117,9 @@ pub fn hkdf_sha_256(
             )));
         }
     }
-    if output_length == 0 || output_length > 1024 {
+    if length == 0 || length > 256 {
         return Err(JsValue::from_str(
-            "Output length must be between 1 and 1024 bytes",
+            "Output length must be between 1 and 256 bytes",
         ));
     }
 
@@ -127,7 +127,7 @@ pub fn hkdf_sha_256(
     let hkdf = Hkdf::<Sha256>::new(salt.as_deref(), shared_secret);
 
     // Derive the key
-    let mut output_key = vec![0u8; output_length];
+    let mut output_key = vec![0u8; length];
 
     // Use provided info or empty
     if info.is_some() {
@@ -236,7 +236,6 @@ impl Sha256HKDF {
         // Derive the key
         let mut output_key = vec![0u8; output_length];
 
-        // Use provided info or empty
         if info.is_some() {
             hkdf.expand(&info.unwrap(), &mut output_key)
                 .map_err(|e| JsValue::from_str(&format!("HKDF expansion failed: {}", e)))?;
