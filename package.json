@@ -1,0 +1,31 @@
+{
+    "name": "x25519-wasm-vn",
+    "type": "module",
+    "collaborators": [
+        "ndtao2020"
+    ],
+    "description": "X25519 for WebAssembly",
+    "version": "1.3.0",
+    "license": "MIT License",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ndtao2020/x25519-wasm-vn"
+    },
+    "files": [
+        "x25519_wasm_vn_bg.js",
+        "x25519_wasm_vn_bg.wasm",
+        "x25519_wasm_vn_bg.wasm.d.ts",
+        "x25519_wasm_vn.d.ts",
+        "x25519_wasm_vn.js"
+    ],
+    "main": "x25519_wasm_vn.js",
+    "types": "x25519_wasm_vn.d.ts",
+    "sideEffects": [
+        "./snippets/*"
+    ],
+    "keywords": [
+        "x25519",
+        "wasm",
+        "webassembly"
+    ]
+}

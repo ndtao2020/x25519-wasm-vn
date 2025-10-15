@@ -1,45 +1,70 @@
 # x25519-wasm-vn
 [![npm](https://img.shields.io/npm/v/x25519-wasm-vn)](https://www.npmjs.com/package/x25519-wasm-vn)
 
-### 🛠️ Installing `wasm-pack`
+## Installing `wasm-bindgen-cli`
 
-```
-cargo install wasm-pack
-```
-
-### 🛠️ Build with `wasm-pack build`
-
-```
-wasm-pack build --target web
+```sh
+cargo install wasm-bindgen-cli
+cargo install wasm-opt --locked
 ```
 
-### 🎁 Publish to NPM with `wasm-pack publish`
+## Building via `wasm-bindgen-cli`
 
+* bundler: (produces code for usage with bundlers like Webpack)
+* web: (directly loadable in a web browser)
+* nodejs: (loadable via require as a CommonJS Node.js module)
+* deno: (usable as a Deno module)
+* no-modules: (like the web target but doesn't use ES Modules).
+
+```sh
+chmod +x build.sh
+./build.sh
 ```
-wasm-pack publish
+
+### Publish to NPM
+
+```sh
+cd pkg-bundler && npm publish
 ```
 
 ## Usage
 
-```js
-import init, { generate_keypair, diffie_hellman } from "x25519-wasm-vn";
+```ts
+import { DiffieHellman, generate_keypair, X25519Keypair } from 'x25519-wasm-vn'
 
-init().then(() => {
-    const bob_key_pair = generate_keypair();
+interface KeyPair {
+  privateKey: Uint8Array
+  publicKey: Uint8Array
+}
 
-    console.log("Public key (Bob): ", bob_key_pair.public_key);
-    console.log("Private key (Bob): ", bob_key_pair.private_key);
+export const generateKeyPair = async (): Promise<KeyPair> => {
+  let keypair_wasm: X25519Keypair | null = null
+  try {
+    keypair_wasm = generate_keypair()
+    return {
+      privateKey: keypair_wasm.private_key,
+      publicKey: keypair_wasm.public_key
+    }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    if (keypair_wasm) {
+      keypair_wasm.free()
+    }
+  }
+}
 
-    const alice_key_pair = generate_keypair();
-
-    console.log("Public key (Alice): ", alice_key_pair.public_key);
-    console.log("Private key (Alice): ", alice_key_pair.private_key);
-
-    let alice_shared = diffie_hellman(alice_key_pair.private_key, bob_key_pair.public_key);
-
-    let bob_shared = diffie_hellman(bob_key_pair.private_key, alice_key_pair.public_key);
-
-    console.log("Shared key (Bob): ", bob_shared);
-    console.log("Shared key (Alice): ", alice_shared);
-});
+export const diffieHellman = async (privateKey: Uint8Array, publicKey: Uint8Array): Promise<Uint8Array> => {
+  let _wasm: DiffieHellman | null = null
+  try {
+    _wasm = new DiffieHellman(privateKey)
+    return _wasm.get_shared_key(publicKey)
+  } catch (err) {
+    console.error(err)
+  } finally {
+    if (_wasm) {
+      _wasm.free()
+    }
+  }
+}
 ```

@@ -31,21 +31,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
       
-      - name: Install wasm-pack
-        run: cargo install wasm-pack
+      - name: Install necessary Tools
+        run: |
+          cargo install wasm-bindgen-cli
+          cargo install wasm-opt --locked
 
       - name: Test
         run: cargo test
 
-      - name: Build WASM package
+      - name: Build packages
         env:
           RUST_LOG: debug
-        run: wasm-pack build --target web # Or other target like nodejs or bundler
+        run: chmod +x build.sh && ./build.sh
 
       - name: Authenticate with npm
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Publish to NPM
-        env:
-          RUST_LOG: debug
-        run: wasm-pack publish
+        run: cd pkg-bundler && npm publish
