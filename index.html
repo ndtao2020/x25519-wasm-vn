@@ -8,7 +8,7 @@
 
 <body>
     <script type="module">
-        import init, { generate_keypair, diffie_hellman } from "./pkg/x25519_wasm_vn.js";
+        import init, { generate_keypair, diffie_hellman, hkdf_sha_256 } from "./pkg/web/x25519_wasm_vn.js";
 
         init().then(() => {
             const bob_key_pair = generate_keypair();
@@ -35,6 +35,11 @@
             } catch (error) {
                 console.error(error.message);
             }
+
+            let alice_enc_key = hkdf_sha_256(alice_shared, undefined, undefined, 32);
+
+            console.log("Derive key (Alice): ", alice_enc_key);
+
         });
 
         function assertTwoByteArraysEqual(arr1, arr2, message) {

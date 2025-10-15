@@ -19,6 +19,10 @@ lto = true
 alloc_cat = "1"
 wasm-bindgen = "0.2"
 getrandom = { version = "0.2", default-features = false, features = ["js"] }
+
+sha2 = { version = "0.10", default-features = false }
+hkdf = { version = "0.12", default-features = false }
+blake3 = { version = "1", default-features = false }
 x25519-dalek = { version = "2", default-features = false, features = [
     "getrandom",
     "static_secrets",
